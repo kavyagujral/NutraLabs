@@ -421,7 +421,7 @@ async def detect_food(file: UploadFile = File(...), current_user: DBUser = Depen
 
     try:
         image_bytes = await file.read()
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        model = genai.GenerativeModel('gemini-2.5-flash-lite')
         
         prompt = """You are an expert food recognition AI. Identify every distinct food item in the image, paying special attention to Indian dishes. 
         CRITICAL INSTRUCTION: Pay very close attention to the textures of vegetable dishes and sabzis. Carefully distinguish between dishes like Karela (Bitter Gourd) and Mushroom sabzi. Do not rush the identification of chopped vegetables.

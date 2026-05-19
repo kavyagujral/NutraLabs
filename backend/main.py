@@ -428,10 +428,12 @@ async def detect_food(file: UploadFile = File(...), current_user: DBUser = Depen
         Return ONLY a valid JSON list of strings representing the detected foods. Do NOT include markdown blocks.
         Example: ["Mushroom Sabzi", "Yellow Dal", "Paratha", "Kadhi"]"""
         
+        image_b64 = base64.b64encode(image_bytes).decode('utf-8')
         response = model.generate_content([
-            {'mime_type': file.content_type, 'data': image_bytes},
+            {'mime_type': file.content_type, 'data': image_b64},
             prompt
         ])
+
         
         try:
             text = response.text.strip()

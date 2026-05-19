@@ -465,7 +465,7 @@ def fetch_nutrition(req: FetchNutritionRequest, current_user: DBUser = Depends(g
     results = []
     total_cal = total_pro = total_carb = total_fat = total_fib = 0.0
     
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash')
     
     for item in req.items:
         # Context building for Database Layering

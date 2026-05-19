@@ -160,7 +160,7 @@ You MUST output ONLY valid JSON matching this schema:
 }}
 Do NOT output any markdown, only the JSON object."""
 
-    gemini_model = genai.GenerativeModel('gemini-2.5-flash')
+    gemini_model = genai.GenerativeModel('gemini-2.5-flash-lite')
 
     try:
         import json
@@ -334,7 +334,7 @@ Instructions:
 4. Portion size should align with the meal calorie target above.
 5. Use clear markdown formatting."""
 
-    gemini_model = genai.GenerativeModel('gemini-2.5-flash')
+    gemini_model = genai.GenerativeModel('gemini-2.5-flash-lite')
 
     try:
         response = gemini_model.generate_content(prompt)
@@ -373,7 +373,7 @@ def ask_llm(req: LLMRequest, current_user: DBUser = Depends(get_current_user)):
     except Exception:
         pass # Silently fail context fetch to not break chat
 
-    gemini_model = genai.GenerativeModel('gemini-2.5-flash')
+    gemini_model = genai.GenerativeModel('gemini-2.5-flash-lite')
     full_prompt = f"You are NutraLab, an AI Health and Nutrition Assistant.\n{context}Answer the following query concisely and use markdown formatting:\n\n{req.query}"
 
     try:

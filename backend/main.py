@@ -21,7 +21,7 @@ os.environ["GRPC_DNS_RESOLVER"] = "native"
 import google.generativeai as genai
 from dotenv import load_dotenv
 
-load_dotenv(override=True)
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"), override=True)
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY", ""))
 
 # Initialize the database tables
@@ -578,4 +578,4 @@ Do NOT include any markdown formatting (like ```json)."""
     }
 
 # Serve the frontend
-app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+app.mount("/", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "../frontend"), html=True), name="frontend")

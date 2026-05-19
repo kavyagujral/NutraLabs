@@ -8,14 +8,41 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=23">
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
 
-  <!-- Background Orbs -->
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
+  <!-- Animated Background -->
+  <div class="animated-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+    <div class="orb orb-5"></div>
+    <div class="orb orb-6"></div>
+    <div class="particles">
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle"></div>
+      <div class="particle p-neon"></div>
+      <div class="particle p-purple"></div>
+      <div class="particle p-neon"></div>
+      <div class="particle p-purple"></div>
+      <div class="particle p-neon"></div>
+      <div class="particle p-purple"></div>
+      <div class="particle p-star"></div>
+      <div class="particle p-star"></div>
+      <div class="particle p-star"></div>
+      <div class="particle p-star"></div>
+    </div>
+    <div class="sparkle-field" id="sparkle-field"></div>
+  </div>
 
   <!-- ── Top Navigation (Authenticated) ── -->
   <nav id="top-navbar" class="hidden nav-bar">
@@ -26,10 +53,7 @@
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         Daily Plan
       </button>
-      <button class="nav-link" data-target="scanner-page" id="nav-ai" aria-label="AI Assistant">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        AI Assistant
-      </button>
+
       <button class="nav-link" data-target="recipe-page" id="nav-recipe" aria-label="Recipe Finder">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         Recipes
@@ -66,7 +90,7 @@
             Powered by Local LLM + ML Engine
           </div>
 
-          <h1>Nutra<span style="-webkit-text-fill-color:var(--neon)">Lab</span></h1>
+          <h1>Nutra<span>Lab</span></h1>
 
           <p>A next-generation AI dietary engine. Sync your physiology to generate mathematically balanced, fully personalized meal sequences — no generic templates.</p>
 
@@ -246,22 +270,6 @@
       </section>
 
       <!-- ══════════════════════════════════════
-           AI ASSISTANT PAGE
-      ══════════════════════════════════════ -->
-      <section id="scanner-page" class="page-view hidden">
-        <div class="glass-panel" style="margin-bottom:1.5rem;">
-          <h2>🤖 AI Health Assistant</h2>
-          <p class="text-muted" style="margin-bottom:1.5rem; font-size:0.95rem;">Ask anything about health, nutrition &amp; diet. Powered by your local LLM.</p>
-          <div class="input-group">
-            <span class="input-icon">💬</span>
-            <input type="text" id="scanner-query" placeholder="e.g. How much protein do I need to build muscle?" aria-label="Ask AI a health question">
-          </div>
-          <button id="btn-search-food" class="btn-primary">Ask AI 🤖</button>
-        </div>
-        <div id="scanner-results-area" class="results-area"></div>
-      </section>
-
-      <!-- ══════════════════════════════════════
            RECIPE FINDER PAGE
       ══════════════════════════════════════ -->
       <section id="recipe-page" class="page-view hidden">
@@ -292,13 +300,13 @@
       <section id="food-scanner-page" class="page-view hidden">
         <div class="glass-panel" style="margin-bottom:1.5rem;">
           <h2>📸 AI Food Scanner</h2>
-          <p class="text-muted" style="margin-bottom:1.5rem; font-size:0.95rem;">Upload a photo or use your camera. Our CV model will identify the food and calculate its macros.</p>
+          <p class="text-muted" style="margin-bottom:1.5rem; font-size:0.95rem;">Upload a photo of your food. Our AI model will identify it and calculate its macros.</p>
           
           <div class="scanner-upload-area" id="scanner-upload-area">
             <label for="food-image-input" class="upload-label">
               <span class="upload-icon">📷</span>
-              <span class="upload-text">Click to Take Photo or Upload Image</span>
-              <input type="file" id="food-image-input" accept="image/*" capture="environment" class="hidden-input">
+              <span class="upload-text">Click to Upload Image</span>
+              <input type="file" id="food-image-input" accept="image/*" class="hidden-input">
             </label>
           </div>
           <div id="image-preview-container" class="hidden" style="text-align:center; margin-bottom: 1.5rem;">
@@ -314,8 +322,10 @@
            PROFILE PAGE
       ══════════════════════════════════════ -->
       <section id="profile-page" class="page-view hidden">
-        <div class="glass-panel">
+        <div class="glass-panel" style="position: relative;">
           <h2 style="text-align:center; margin-bottom:2rem;">🧬 Biological Profile &amp; Metabolic Targets</h2>
+
+          <button id="btn-open-edit-profile" style="position: absolute; top: 2rem; right: 2rem; background: rgba(0,255,163,0.1); border: 1px solid var(--neon); color: var(--neon); padding: 0.5rem 1.2rem; border-radius: 8px; font-family: var(--font); font-size: 0.85rem; font-weight: 600; transition: all 0.2s; z-index: 5;">Edit Profile ✏️</button>
 
           <div class="section-title">Identity Matrix</div>
           <div id="full-profile-area" class="profile-grid">
@@ -336,6 +346,87 @@
     </main>
   </div>
 
-  <script src="app.js?v=8"></script>
+  <!-- ══════════════════════════════════════
+       FLOATING AI CHATBOT
+  ══════════════════════════════════════ -->
+  <div id="floating-chat-container" class="hidden">
+    <div id="chat-panel" class="chat-panel closed">
+      <div class="chat-header">
+        <div class="chat-title">🤖 NutraLab's AI</div>
+        <button id="btn-close-chat" class="btn-close" aria-label="Close chat">×</button>
+      </div>
+      <div id="chat-messages" class="chat-messages">
+        <div class="chat-msg ai-msg">
+          Hello! I'm NutraLab's AI. How can I help you with your diet today?
+        </div>
+      </div>
+      <div class="chat-input-area">
+        <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off">
+        <button id="btn-send-chat" aria-label="Send">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2z"/></svg>
+        </button>
+      </div>
+    </div>
+    <button id="btn-toggle-chat" class="chat-toggle-btn" aria-label="Open AI Assistant">
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    </button>
+  </div>
+
+  <!-- Edit Profile Modal -->
+  <div id="edit-profile-modal" class="modal-overlay hidden">
+    <div class="modal-content glass-panel" style="width: 100%; max-width: 500px; margin: auto; padding: 2rem;">
+      <h2 style="margin-bottom: 1.5rem;">Edit Profile</h2>
+      <form id="edit-profile-form" class="auth-form" style="margin-top: 0;">
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" id="edit-name" class="input-field" required>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+          <div class="form-group">
+            <label>Age</label>
+            <input type="number" id="edit-age" class="input-field" required>
+          </div>
+          <div class="form-group">
+            <label>Gender</label>
+            <select id="edit-gender" class="input-field">
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+          <div class="form-group">
+            <label>Height (cm)</label>
+            <input type="number" id="edit-height" class="input-field" required>
+          </div>
+          <div class="form-group">
+            <label>Weight (kg)</label>
+            <input type="number" id="edit-weight" class="input-field" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Activity Level</label>
+          <select id="edit-activity" class="input-field">
+            <option value="Sedentary">Sedentary (Little/no exercise)</option>
+            <option value="Light">Light (Exercise 1-3 times/week)</option>
+            <option value="Moderate">Moderate (Exercise 4-5 times/week)</option>
+            <option value="Active">Active (Daily exercise/intense)</option>
+            <option value="Very Active">Very Active (Physical job/hard exercise)</option>
+          </select>
+        </div>
+        <div id="edit-profile-error" class="error-msg"></div>
+        <div style="display: flex; gap: 10px; margin-top: 1.5rem;">
+          <button type="button" id="btn-cancel-edit" class="btn-secondary" style="flex: 1; padding: 0.8rem; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; cursor: pointer;">Cancel</button>
+          <button type="submit" id="btn-save-profile" class="btn-primary" style="flex: 2;">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Custom Cursor -->
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+
+  <script src="app.js?v=23"></script>
 </body>
 </html>

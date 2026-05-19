@@ -8,16 +8,20 @@ from typing import List
 import requests
 
 from database import engine, get_db, Base
-from models import DBUser, UserCreate, UserLogin, Token, DietRequest, FoodBasedDietRequest, IngredientRequest, LLMRequest, FetchNutritionRequest
+from models import DBUser, UserCreate, UserUpdate, UserLogin, Token, DietRequest, FoodBasedDietRequest, IngredientRequest, LLMRequest, FetchNutritionRequest
 import utils
 import ml_model
 import base64
 import os
 import json
+
+# Fix gRPC DNS resolution issues on macOS / specific environments
+os.environ["GRPC_DNS_RESOLVER"] = "native"
+
 import google.generativeai as genai
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 genai.configure(api_key=os.environ.get("GEMINI_API_KEY", ""))
 
 # Initialize the database tables
@@ -405,6 +409,23 @@ def get_my_profile(current_user: DBUser = Depends(get_current_user)):
         "activity_level": current_user.activity_level,
         "bmi": utils.calculate_bmi(current_user.weight_kg, current_user.height_cm)
     }
+
+@app.put("/me")
+def update_my_profile(
+    profile_update: UserUpdate, 
+    current_user: DBUser = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """ Update profile data for the currently logged in user """
+    update_data = profile_update.dict(exclude_unset=True)
+    
+    for key, value in update_data.items():
+        setattr(current_user, key, value)
+        
+    db.commit()
+    db.refresh(current_user)
+    
+    return {"message": "Profile updated successfully", "user": current_user.email}
 
 @app.post("/detect-food")
 async def detect_food(file: UploadFile = File(...), current_user: DBUser = Depends(get_current_user)):

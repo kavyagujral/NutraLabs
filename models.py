@@ -35,6 +35,14 @@ class UserCreate(BaseModel):
     weight_kg: float
     activity_level: str
 
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    age: Optional[int] = None
+    gender: Optional[str] = None
+    height_cm: Optional[float] = None
+    weight_kg: Optional[float] = None
+    activity_level: Optional[str] = None
+
 class UserLogin(BaseModel):
     email: str
     password: str

@@ -42,12 +42,16 @@ navLinks.forEach(link => {
 function showAuth() {
   topNavbar.classList.add("hidden");
   guestHeader.classList.add("hidden");
+  const chatContainer = document.getElementById("floating-chat-container");
+  if (chatContainer) chatContainer.classList.add("hidden");
   showPage("home-page");
 }
 
 function enterApp() {
   topNavbar.classList.remove("hidden");
   guestHeader.classList.add("hidden");
+  const chatContainer = document.getElementById("floating-chat-container");
+  if (chatContainer) chatContainer.classList.remove("hidden");
   showPage("plan-page");
   preloadUserProfile();
 }
@@ -354,20 +358,45 @@ document.getElementById("btn-generate-day").addEventListener("click", async () =
   }
 });
 
-// ── AI Assistant ──────────────────────────────
-document.getElementById("btn-search-food")?.addEventListener("click", async () => {
-  const scanArea = document.getElementById("scanner-results-area");
-  const query    = document.getElementById("scanner-query").value;
-  const btn      = document.getElementById("btn-search-food");
+// ── Floating AI Chatbot ───────────────────────
+const btnToggleChat = document.getElementById("btn-toggle-chat");
+const btnCloseChat = document.getElementById("btn-close-chat");
+const chatPanel = document.getElementById("chat-panel");
+const chatMessages = document.getElementById("chat-messages");
+const chatInput = document.getElementById("chat-input");
+const btnSendChat = document.getElementById("btn-send-chat");
 
-  if (!query.trim() || query.length < 2) return alert("Please enter at least 2 characters.");
+function toggleChat() {
+  chatPanel.classList.toggle("closed");
+  if (!chatPanel.classList.contains("closed")) {
+    chatInput.focus();
+  }
+}
 
-  setLoading(btn, true);
-  scanArea.innerHTML = `
-    <div class="chat-output">
+btnToggleChat?.addEventListener("click", toggleChat);
+btnCloseChat?.addEventListener("click", toggleChat);
+
+async function handleSendChat() {
+  const query = chatInput.value.trim();
+  if (!query) return;
+
+  // Append user message
+  chatMessages.insertAdjacentHTML("beforeend", `
+    <div class="chat-msg user-msg">${query}</div>
+  `);
+  chatInput.value = "";
+  chatInput.disabled = true;
+  btnSendChat.disabled = true;
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+
+  // Append typing indicator
+  const typingId = "typing-" + Date.now();
+  chatMessages.insertAdjacentHTML("beforeend", `
+    <div id="${typingId}" class="chat-msg ai-msg">
       <div class="typing-dots"><span></span><span></span><span></span></div>
-      <p style="color:var(--muted); font-size:0.85rem; margin-top:0.5rem;">AI is thinking…</p>
-    </div>`;
+    </div>
+  `);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
 
   try {
     const res = await fetch(`${API_BASE}/ask-llm`, {
@@ -375,20 +404,33 @@ document.getElementById("btn-search-food")?.addEventListener("click", async () =
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
       body: JSON.stringify({ query })
     });
+    
+    document.getElementById(typingId).remove();
+    
     if (res.status === 401) return logoutBtn.click();
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || "Error generating response");
 
     const htmlResponse = marked.parse(data.response);
-    scanArea.innerHTML = `
-      <div class="chat-output markdown-content" style="border-left-color:var(--violet);">
-        ${htmlResponse}
-      </div>`;
+    chatMessages.insertAdjacentHTML("beforeend", `
+      <div class="chat-msg ai-msg markdown-content">${htmlResponse}</div>
+    `);
   } catch (err) {
-    scanArea.innerHTML = `<p class="error-msg">${err.message}</p>`;
+    if(document.getElementById(typingId)) document.getElementById(typingId).remove();
+    chatMessages.insertAdjacentHTML("beforeend", `
+      <div class="chat-msg ai-msg" style="color:var(--error);">${err.message}</div>
+    `);
   } finally {
-    setLoading(btn, false, "Ask AI 🤖");
+    chatInput.disabled = false;
+    btnSendChat.disabled = false;
+    chatInput.focus();
+    chatMessages.scrollTop = chatMessages.scrollHeight;
   }
+}
+
+btnSendChat?.addEventListener("click", handleSendChat);
+chatInput?.addEventListener("keypress", (e) => {
+  if (e.key === "Enter") handleSendChat();
 });
 
 // ── Recipe Finder ─────────────────────────────
@@ -677,6 +719,8 @@ function renderProfileArea(myData) {
     <div class="profile-stat" style="grid-column:span 2; border-color:var(--border-neon);"><span class="ps-label">Email</span><span class="ps-value" style="font-size:0.95rem; color:var(--muted2);">${myData.email}</span></div>`;
 }
 
+let currentProfile = null;
+
 async function preloadUserProfile() {
   try {
     const macroRes = await fetch(`${API_BASE}/my-macros?goal=Maintenance`, {
@@ -688,8 +732,186 @@ async function preloadUserProfile() {
     } else if (macroRes.status === 401) { logoutBtn.click(); return; }
 
     const meRes = await fetch(`${API_BASE}/me`, { headers: { "Authorization": `Bearer ${token}` } });
-    if (meRes.ok) renderProfileArea(await meRes.json());
+    if (meRes.ok) {
+      currentProfile = await meRes.json();
+      renderProfileArea(currentProfile);
+    }
   } catch { /* silent */ }
 }
 
+// ── Edit Profile Logic ────────────────────────
+const editProfileModal = document.getElementById("edit-profile-modal");
+const btnOpenEditProfile = document.getElementById("btn-open-edit-profile");
+const btnCancelEdit = document.getElementById("btn-cancel-edit");
+const editProfileForm = document.getElementById("edit-profile-form");
+const editProfileError = document.getElementById("edit-profile-error");
+const btnSaveProfile = document.getElementById("btn-save-profile");
+
+function openEditProfileModal(profile) {
+  document.getElementById("edit-name").value = profile.name || "";
+  document.getElementById("edit-age").value = profile.age || "";
+  document.getElementById("edit-gender").value = profile.gender || "Male";
+  document.getElementById("edit-height").value = profile.height_cm || "";
+  document.getElementById("edit-weight").value = profile.weight_kg || "";
+  document.getElementById("edit-activity").value = profile.activity_level || "Moderate";
+  if (editProfileError) editProfileError.textContent = "";
+  editProfileModal.classList.remove("hidden");
+}
+
+if (btnOpenEditProfile) {
+  btnOpenEditProfile.addEventListener("click", async () => {
+    // If profile already loaded, open immediately
+    if (currentProfile) {
+      openEditProfileModal(currentProfile);
+      return;
+    }
+    // Otherwise fetch it first
+    try {
+      const res = await fetch(`${API_BASE}/me`, { headers: { "Authorization": `Bearer ${token}` } });
+      if (res.ok) {
+        currentProfile = await res.json();
+        openEditProfileModal(currentProfile);
+      }
+    } catch (e) { console.error("Failed to load profile:", e); }
+  });
+}
+
+if (btnCancelEdit) {
+  btnCancelEdit.addEventListener("click", () => {
+    editProfileModal.classList.add("hidden");
+  });
+}
+
+// Click outside the modal to close
+if (editProfileModal) {
+  editProfileModal.addEventListener("click", (e) => {
+    if (e.target === editProfileModal) {
+      editProfileModal.classList.add("hidden");
+    }
+  });
+}
+
+if (editProfileForm) {
+  editProfileForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    setLoading(btnSaveProfile, true);
+    editProfileError.textContent = "";
+
+    const payload = {
+      name: document.getElementById("edit-name").value,
+      age: parseInt(document.getElementById("edit-age").value),
+      gender: document.getElementById("edit-gender").value,
+      height_cm: parseFloat(document.getElementById("edit-height").value),
+      weight_kg: parseFloat(document.getElementById("edit-weight").value),
+      activity_level: document.getElementById("edit-activity").value
+    };
+
+    try {
+      const res = await fetch(`${API_BASE}/me`, {
+        method: "PUT",
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Failed to update profile");
+      
+      // Success
+      editProfileModal.classList.add("hidden");
+      await preloadUserProfile(); // Refresh UI stats
+    } catch (err) {
+      editProfileError.textContent = err.message;
+    } finally {
+      setLoading(btnSaveProfile, false, "Save Changes");
+    }
+  });
+}
+
 init();
+
+// ── Custom Cursor ─────────────────────────────
+const cursorDot = document.getElementById('cursor-dot');
+const cursorRing = document.getElementById('cursor-ring');
+
+if (cursorDot && cursorRing) {
+  let mouseX = window.innerWidth / 2;
+  let mouseY = window.innerHeight / 2;
+  let ringX = mouseX;
+  let ringY = mouseY;
+  
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    // Dot follows instantly
+    cursorDot.style.transform = `translate3d(${mouseX}px, ${mouseY}px, 0)`;
+  });
+
+  // Render loop for smooth ring trailing
+  function renderCursor() {
+    ringX += (mouseX - ringX) * 0.15; // spring easing
+    ringY += (mouseY - ringY) * 0.15;
+    cursorRing.style.transform = `translate3d(${ringX}px, ${ringY}px, 0)`;
+    requestAnimationFrame(renderCursor);
+  }
+  requestAnimationFrame(renderCursor);
+
+  // Hover states on clickable elements
+  const setupHoverStates = () => {
+    const interactiveElements = document.querySelectorAll('a, button, input, select, .nav-link, .profile-chip, .pill-option + span, label');
+    interactiveElements.forEach(el => {
+      // Remove old listeners if we re-run this
+      el.removeEventListener('mouseenter', addHoverState);
+      el.removeEventListener('mouseleave', removeHoverState);
+      
+      el.addEventListener('mouseenter', addHoverState);
+      el.addEventListener('mouseleave', removeHoverState);
+    });
+  };
+  
+  function addHoverState() { document.body.classList.add('cursor-hovering'); }
+  function removeHoverState() { document.body.classList.remove('cursor-hovering'); }
+
+  // Initial setup and re-setup on DOM changes (like when views switch)
+  setupHoverStates();
+  const observer = new MutationObserver(setupHoverStates);
+  observer.observe(document.body, { childList: true, subtree: true });
+}
+
+// ── Random Sparkle Generator ──────────────────
+(function spawnSparkles() {
+  const field = document.getElementById('sparkle-field');
+  if (!field) return;
+
+  const neonColors  = ['#00ffa3', '#00d4ff', '#00ffa3'];
+  const purpleColors = ['#b57bff', '#8b5cf6', '#c084fc', '#a855f7'];
+  const symbols = ['✦', '✧', '⋆', '✺', '✸', '✹'];
+
+  function spawnOne() {
+    const isPurple = Math.random() > 0.45;
+    const colors = isPurple ? purpleColors : neonColors;
+    const clr = colors[Math.floor(Math.random() * colors.length)];
+    const sz  = (Math.random() * 14 + 8) + 'px';
+    const dur = (Math.random() * 3 + 2) + 's';
+    const x   = Math.random() * 100;
+    const y   = Math.random() * 100;
+    const sym = symbols[Math.floor(Math.random() * symbols.length)];
+
+    const el = document.createElement('span');
+    el.className = 'spark';
+    el.textContent = sym;
+    el.style.cssText = `--clr:${clr}; --sz:${sz}; --dur:${dur}; left:${x}%; top:${y}%;`;
+    field.appendChild(el);
+
+    // Remove after animation ends
+    setTimeout(() => el.remove(), parseFloat(dur) * 1000 + 200);
+  }
+
+  // Spawn a sparkle every 400–900ms
+  function scheduleNext() {
+    const delay = Math.random() * 500 + 400;
+    setTimeout(() => { spawnOne(); scheduleNext(); }, delay);
+  }
+  scheduleNext();
+})();

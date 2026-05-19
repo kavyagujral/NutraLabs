@@ -469,15 +469,16 @@ def fetch_nutrition(req: FetchNutritionRequest, current_user: DBUser = Depends(g
     
     # A smart local fallback database in case the API limit is hit or network fails
     fallback_db = {
-        "dal": {"calories": 150, "protein_g": 9.0, "carbs_g": 22.0, "fat_g": 3.0, "fiber_g": 5.0},
-        "sabzi": {"calories": 110, "protein_g": 2.5, "carbs_g": 14.0, "fat_g": 5.0, "fiber_g": 4.0},
-        "gourd": {"calories": 90, "protein_g": 1.5, "carbs_g": 10.0, "fat_g": 4.0, "fiber_g": 3.0},
-        "roti": {"calories": 85, "protein_g": 3.0, "carbs_g": 18.0, "fat_g": 0.5, "fiber_g": 2.2},
-        "paratha": {"calories": 260, "protein_g": 4.5, "carbs_g": 38.0, "fat_g": 9.5, "fiber_g": 3.0},
-        "paneer": {"calories": 260, "protein_g": 18.0, "carbs_g": 4.0, "fat_g": 20.0, "fiber_g": 0.0},
-        "rice": {"calories": 130, "protein_g": 2.7, "carbs_g": 28.0, "fat_g": 0.3, "fiber_g": 0.4},
-        "chicken": {"calories": 165, "protein_g": 31.0, "carbs_g": 0.0, "fat_g": 3.6, "fiber_g": 0.0},
-        "egg": {"calories": 70, "protein_g": 6.0, "carbs_g": 0.6, "fat_g": 5.0, "fiber_g": 0.0},
+        "dal": {"portion": "1 standard bowl (150g)", "calories": 150, "protein_g": 9.0, "carbs_g": 22.0, "fat_g": 3.0, "fiber_g": 5.0},
+        "sabzi": {"portion": "1 standard bowl (150g)", "calories": 110, "protein_g": 2.5, "carbs_g": 14.0, "fat_g": 5.0, "fiber_g": 4.0},
+        "gourd": {"portion": "1 standard bowl (150g)", "calories": 90, "protein_g": 1.5, "carbs_g": 10.0, "fat_g": 4.0, "fiber_g": 3.0},
+        "roti": {"portion": "1 piece (30g)", "calories": 85, "protein_g": 3.0, "carbs_g": 18.0, "fat_g": 0.5, "fiber_g": 2.2},
+        "paratha": {"portion": "1 piece (80g)", "calories": 260, "protein_g": 4.5, "carbs_g": 38.0, "fat_g": 9.5, "fiber_g": 3.0},
+        "paneer": {"portion": "1 standard serving (100g)", "calories": 260, "protein_g": 18.0, "carbs_g": 4.0, "fat_g": 20.0, "fiber_g": 0.0},
+        "rice": {"portion": "1 standard cup (150g)", "calories": 130, "protein_g": 2.7, "carbs_g": 28.0, "fat_g": 0.3, "fiber_g": 0.4},
+        "chicken": {"portion": "1 standard serving (150g)", "calories": 165, "protein_g": 31.0, "carbs_g": 0.0, "fat_g": 3.6, "fiber_g": 0.0},
+        "egg": {"portion": "1 piece (50g)", "calories": 70, "protein_g": 6.0, "carbs_g": 0.6, "fat_g": 5.0, "fiber_g": 0.0},
+        "curry": {"portion": "1 standard bowl (250g)", "calories": 350, "protein_g": 15.0, "carbs_g": 25.0, "fat_g": 20.0, "fiber_g": 5.0},
     }
     
     for item in req.items:
@@ -551,7 +552,7 @@ Do NOT include any markdown formatting (like ```json)."""
                 
             data = {
                 "name": item.name, 
-                "portion": item.portion,
+                "portion": matched_macro["portion"],
                 "calories": matched_macro["calories"], 
                 "protein_g": matched_macro["protein_g"], 
                 "carbs_g": matched_macro["carbs_g"], 

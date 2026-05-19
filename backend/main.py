@@ -160,7 +160,7 @@ You MUST output ONLY valid JSON matching this schema:
 }}
 Do NOT output any markdown, only the JSON object."""
 
-    gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+    gemini_model = genai.GenerativeModel('gemini-2.5-flash')
 
     try:
         import json
@@ -334,7 +334,7 @@ Instructions:
 4. Portion size should align with the meal calorie target above.
 5. Use clear markdown formatting."""
 
-    gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+    gemini_model = genai.GenerativeModel('gemini-2.5-flash')
 
     try:
         response = gemini_model.generate_content(prompt)
@@ -373,7 +373,7 @@ def ask_llm(req: LLMRequest, current_user: DBUser = Depends(get_current_user)):
     except Exception:
         pass # Silently fail context fetch to not break chat
 
-    gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+    gemini_model = genai.GenerativeModel('gemini-2.5-flash')
     full_prompt = f"You are NutraLab, an AI Health and Nutrition Assistant.\n{context}Answer the following query concisely and use markdown formatting:\n\n{req.query}"
 
     try:
@@ -421,7 +421,7 @@ async def detect_food(file: UploadFile = File(...), current_user: DBUser = Depen
 
     try:
         image_bytes = await file.read()
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.5-flash')
         
         prompt = """You are an expert food recognition AI. Identify every distinct food item in the image, paying special attention to Indian dishes. 
         CRITICAL INSTRUCTION: Pay very close attention to the textures of vegetable dishes and sabzis. Carefully distinguish between dishes like Karela (Bitter Gourd) and Mushroom sabzi. Do not rush the identification of chopped vegetables.
@@ -465,7 +465,7 @@ def fetch_nutrition(req: FetchNutritionRequest, current_user: DBUser = Depends(g
     results = []
     total_cal = total_pro = total_carb = total_fat = total_fib = 0.0
     
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    model = genai.GenerativeModel('gemini-2.5-pro')
     
     for item in req.items:
         # Context building for Database Layering

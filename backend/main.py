@@ -160,17 +160,18 @@ You MUST output ONLY valid JSON matching this schema:
 }}
 Do NOT output any markdown, only the JSON object."""
 
-    ollama_url = "http://localhost:11434/api/generate"
-    payload = {"model": "llama3", "prompt": prompt, "stream": False, "format": "json"}
+    gemini_model = genai.GenerativeModel('gemini-2.5-flash')
 
     try:
         import json
-        response = requests.post(ollama_url, json=payload, timeout=180)
-        response.raise_for_status()
-        data = response.json()
+        response = gemini_model.generate_content(prompt)
+        text = response.text.strip()
+        if text.startswith("```json"): text = text[7:]
+        if text.startswith("```"): text = text[3:]
+        if text.endswith("```"): text = text[:-3]
         
         try:
-            diet_data = json.loads(data.get("response", "{}"))
+            diet_data = json.loads(text.strip())
             meals = diet_data.get("meals", [])
         except json.JSONDecodeError:
             meals = []
@@ -249,10 +250,8 @@ Do NOT output any markdown, only the JSON object."""
             "target_macros": macros,
             "response": final_markdown
         }
-    except requests.exceptions.ConnectionError:
-        raise HTTPException(status_code=503, detail="Ollama service is unreachable. Please ensure Ollama is running locally on port 11434.")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"LLM Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Gemini Error: {str(e)}")
 
 @app.get("/my-macros")
 def get_my_macros(goal: str = "Maintenance", current_user: DBUser = Depends(get_current_user)):
@@ -335,18 +334,13 @@ Instructions:
 4. Portion size should align with the meal calorie target above.
 5. Use clear markdown formatting."""
 
-    ollama_url = "http://localhost:11434/api/generate"
-    payload = {"model": "llama3", "prompt": prompt, "stream": False}
+    gemini_model = genai.GenerativeModel('gemini-2.5-flash')
 
     try:
-        response = requests.post(ollama_url, json=payload, timeout=180)
-        response.raise_for_status()
-        data = response.json()
-        return {"response": data.get("response", "No response generated.")}
-    except requests.exceptions.ConnectionError:
-        raise HTTPException(status_code=503, detail="Ollama service is unreachable. Please ensure Ollama is running locally on port 11434.")
+        response = gemini_model.generate_content(prompt)
+        return {"response": response.text}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"LLM Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Gemini Error: {str(e)}")
 
 @app.post("/ask-llm")
 def ask_llm(req: LLMRequest, current_user: DBUser = Depends(get_current_user)):
@@ -379,22 +373,14 @@ def ask_llm(req: LLMRequest, current_user: DBUser = Depends(get_current_user)):
     except Exception:
         pass # Silently fail context fetch to not break chat
 
-    ollama_url = "http://localhost:11434/api/generate"
-    payload = {
-        "model": "llama3",
-        "prompt": f"You are NutraLab, an AI Health and Nutrition Assistant.\n{context}Answer the following query concisely and use markdown formatting:\n\n{req.query}",
-        "stream": False
-    }
+    gemini_model = genai.GenerativeModel('gemini-2.5-flash')
+    full_prompt = f"You are NutraLab, an AI Health and Nutrition Assistant.\n{context}Answer the following query concisely and use markdown formatting:\n\n{req.query}"
 
     try:
-        response = requests.post(ollama_url, json=payload, timeout=120)
-        response.raise_for_status()
-        data = response.json()
-        return {"response": data.get("response", "No response generated.")}
-    except requests.exceptions.ConnectionError:
-        raise HTTPException(status_code=503, detail="Ollama service is unreachable. Please ensure Ollama is running locally on port 11434.")
+        response = gemini_model.generate_content(full_prompt)
+        return {"response": response.text}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"LLM Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Gemini Error: {str(e)}")
 
 @app.get("/me")
 def get_my_profile(current_user: DBUser = Depends(get_current_user)):

@@ -3,8 +3,8 @@ uvicorn[standard]==0.29.0
 sqlalchemy==2.0.29
 passlib[bcrypt]==1.7.4
 PyJWT==2.8.0
-scikit-learn==1.5.2
-pandas==2.2.1
+scikit-learn
+pandas
 pydantic==2.6.4
 pydantic-settings==2.2.1
 python-multipart==0.0.9

@@ -465,7 +465,20 @@ def fetch_nutrition(req: FetchNutritionRequest, current_user: DBUser = Depends(g
     results = []
     total_cal = total_pro = total_carb = total_fat = total_fib = 0.0
     
-    model = genai.GenerativeModel('gemini-2.5-pro')
+    model = genai.GenerativeModel('gemini-2.5-flash-lite')
+    
+    # A smart local fallback database in case the API limit is hit or network fails
+    fallback_db = {
+        "dal": {"calories": 150, "protein_g": 9.0, "carbs_g": 22.0, "fat_g": 3.0, "fiber_g": 5.0},
+        "sabzi": {"calories": 110, "protein_g": 2.5, "carbs_g": 14.0, "fat_g": 5.0, "fiber_g": 4.0},
+        "gourd": {"calories": 90, "protein_g": 1.5, "carbs_g": 10.0, "fat_g": 4.0, "fiber_g": 3.0},
+        "roti": {"calories": 85, "protein_g": 3.0, "carbs_g": 18.0, "fat_g": 0.5, "fiber_g": 2.2},
+        "paratha": {"calories": 260, "protein_g": 4.5, "carbs_g": 38.0, "fat_g": 9.5, "fiber_g": 3.0},
+        "paneer": {"calories": 260, "protein_g": 18.0, "carbs_g": 4.0, "fat_g": 20.0, "fiber_g": 0.0},
+        "rice": {"calories": 130, "protein_g": 2.7, "carbs_g": 28.0, "fat_g": 0.3, "fiber_g": 0.4},
+        "chicken": {"calories": 165, "protein_g": 31.0, "carbs_g": 0.0, "fat_g": 3.6, "fiber_g": 0.0},
+        "egg": {"calories": 70, "protein_g": 6.0, "carbs_g": 0.6, "fat_g": 5.0, "fiber_g": 0.0},
+    }
     
     for item in req.items:
         # Context building for Database Layering
@@ -525,10 +538,25 @@ Do NOT include any markdown formatting (like ```json)."""
             if text.endswith("```"): text = text[:-3]
             data = json.loads(text.strip())
         except Exception as e:
-            # Absolute fallback
+            # Intelligent Local Fallback based on food type
+            name_lower = item.name.lower()
+            matched_macro = None
+            for key, val in fallback_db.items():
+                if key in name_lower:
+                    matched_macro = val
+                    break
+            
+            if not matched_macro:
+                matched_macro = fallback_db["sabzi"] # generic fallback
+                
             data = {
-                "name": item.name, "portion": item.portion,
-                "calories": 250, "protein_g": 10.0, "carbs_g": 30.0, "fat_g": 10.0, "fiber_g": 3.0
+                "name": item.name, 
+                "portion": item.portion,
+                "calories": matched_macro["calories"], 
+                "protein_g": matched_macro["protein_g"], 
+                "carbs_g": matched_macro["carbs_g"], 
+                "fat_g": matched_macro["fat_g"], 
+                "fiber_g": matched_macro["fiber_g"]
             }
             
         cal = float(data.get("calories", 0))

@@ -456,9 +456,8 @@ async def detect_food(file: UploadFile = File(...), current_user: DBUser = Depen
             
         return {"detected_items": detected_items}
     except Exception as e:
-        # Graceful Quota Fallback: return standard items instead of raising 500 error
-        # This allows the user to see the confirmation box and manually type/adjust portions
-        return {"detected_items": ["Gourd Sabzi", "Yellow Dal", "Paratha"]}
+        # Graceful Quota Fallback: return empty items and error flag to indicate heavy load
+        return {"detected_items": [], "error_fallback": True}
 
 @app.post("/fetch-nutrition")
 def fetch_nutrition(req: FetchNutritionRequest, current_user: DBUser = Depends(get_current_user)):

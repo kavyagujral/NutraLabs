@@ -518,6 +518,7 @@ btnAnalyzeFood?.addEventListener("click", async () => {
     if (!res.ok) throw new Error(data.detail || "Failed to detect food");
 
     const items = data.detected_items || [];
+    const isFallback = data.error_fallback || items.length === 0;
     
     // Render Confirmation Form
     let formHtml = `
@@ -526,16 +527,33 @@ btnAnalyzeFood?.addEventListener("click", async () => {
           <h2 style="color:var(--text-light); margin:0;">Confirm Detected Foods</h2>
         </div>
         <div class="ai-meal-body">
+    `;
+    
+    if (isFallback) {
+        formHtml += `
+          <p style="color:#ffb74d; font-size:0.85rem; margin-bottom:1.2rem; text-align:center; padding: 0.6rem 0.8rem; background: rgba(255, 183, 77, 0.08); border: 1px solid rgba(255, 183, 77, 0.3); border-radius: 8px; font-weight: 500; line-height: 1.4;">
+            ⚠️ AI server is currently under heavy load. Please type your food items manually below!
+          </p>
+        `;
+    } else {
+        formHtml += `
           <p style="color:var(--muted2); font-size:0.9rem; margin-bottom:1rem; text-align:center;">
             Please review the detected items and provide the portion size you ate.
           </p>
+        `;
+    }
+    
+    formHtml += `
           <div id="confirmation-items-container">
     `;
     
-    items.forEach((item, idx) => {
+    // If fallback, pre-populate 3 empty rows. Otherwise, populate the detected items.
+    const displayItems = isFallback ? ["", "", ""] : items;
+    
+    displayItems.forEach((item, idx) => {
         formHtml += `
             <div class="food-confirm-row" style="display:flex; gap:10px; margin-bottom:10px; align-items:center; flex-wrap: wrap;">
-                <input type="text" class="input-field food-name-input" value="${item}" style="flex:2; min-width: 150px;" placeholder="Food Name">
+                <input type="text" class="input-field food-name-input" value="${item}" style="flex:2; min-width: 150px;" placeholder="e.g. Rice, Dal, Paratha">
                 <div style="flex:2; display:flex; gap:5px; min-width: 200px;">
                     <input type="text" class="input-field portion-input" value="" placeholder="e.g. 1 bowl, 200g (leave empty for standard)" style="flex:1;">
                     <button class="btn-std-size" type="button" style="padding: 0 0.5rem; background: rgba(0, 255, 163, 0.1); border: 1px solid var(--neon); color: var(--neon); border-radius: 6px; font-size: 0.75rem; cursor: pointer; white-space: nowrap; transition: all 0.2s;" onclick="this.previousElementSibling.value='1 standard serving'">Standard</button>
@@ -546,6 +564,13 @@ btnAnalyzeFood?.addEventListener("click", async () => {
     
     formHtml += `
           </div>
+          
+          <div style="display:flex; gap:10px; margin-top:1rem;">
+              <button id="btn-add-food-row" class="btn-secondary" type="button" style="flex:1; padding: 0.6rem; font-size:0.85rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius:8px; color:var(--text-light); cursor:pointer;">
+                ➕ Add Another Food
+              </button>
+          </div>
+          
           <button id="btn-fetch-nutrition" class="btn-primary" style="width:100%; margin-top:1rem;">
             Get Precise Nutrition 🎯
           </button>
@@ -554,6 +579,21 @@ btnAnalyzeFood?.addEventListener("click", async () => {
     `;
     
     resultArea.innerHTML = formHtml;
+    
+    // Add listener for "Add Another Food" button
+    document.getElementById("btn-add-food-row")?.addEventListener("click", () => {
+        const container = document.getElementById("confirmation-items-container");
+        const newRow = `
+            <div class="food-confirm-row" style="display:flex; gap:10px; margin-bottom:10px; align-items:center; flex-wrap: wrap;">
+                <input type="text" class="input-field food-name-input" value="" style="flex:2; min-width: 150px;" placeholder="e.g. Rice, Dal, Paratha">
+                <div style="flex:2; display:flex; gap:5px; min-width: 200px;">
+                    <input type="text" class="input-field portion-input" value="" placeholder="e.g. 1 bowl, 200g (leave empty for standard)" style="flex:1;">
+                    <button class="btn-std-size" type="button" style="padding: 0 0.5rem; background: rgba(0, 255, 163, 0.1); border: 1px solid var(--neon); color: var(--neon); border-radius: 6px; font-size: 0.75rem; cursor: pointer; white-space: nowrap; transition: all 0.2s;" onclick="this.previousElementSibling.value='1 standard serving'">Standard</button>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', newRow);
+    });
     
     // Add listener for the new button
     document.getElementById("btn-fetch-nutrition").addEventListener("click", async (e) => {
